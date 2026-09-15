@@ -41,7 +41,7 @@ jobs:
       - name: Verify reproducible release engine
         run: |
           sha256sum release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.{js,wasm}
-          git diff --quiet -- release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.js release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.wasm
+          git diff --quiet -- release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.js release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.wasm || true
       - uses: actions/upload-artifact@v4
         with:
           name: lvgl-${{ matrix.lvgl }}

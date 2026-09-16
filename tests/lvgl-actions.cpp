@@ -161,6 +161,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     SET_SELECTED(matrix, 0xffff);
     fixture.run(71, matrix);
     CHECK(fixture.result.getInt() == 65535);
+    fixture.result = Value("", VALUE_TYPE_STRING);
     fixture.run(73, matrix, Value(0, VALUE_TYPE_INT32), 3);
     CHECK(fixture.result.isString());
     CHECK(!strcmp(fixture.result.getString(), "first"));

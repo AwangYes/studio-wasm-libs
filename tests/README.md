@@ -9,7 +9,7 @@ The GitHub workflow pins the toolchain, FreeType and all LVGL/framework commits.
 
 Covered: Textarea setters/getter ownership, password mode, Unicode, empty
 placeholder, temporary string conversion, ButtonMatrix selection/NONE, complete
-map/control replacement, nested text update, 500 replacements, deletion, invalid
+map/control replacement, detached original bindings after Set Map, 500 replacements, deletion, invalid
 action IDs, invalid parameter counts and wrong widget types.
 
 The same test target also compiles the map helper as C and deterministically
@@ -28,8 +28,8 @@ git submodule update --init lvgl-runtime/v8.4.0/lvgl # Repeat for each version
 ```
 
 Release builds normalize repository paths in diagnostics. CI rebuilds every
-engine using the pinned toolchain and compares JS/WASM bytes with the committed
-artifacts. Amalgamation generation uses the framework commit's timestamp via
+engine using the pinned toolchain, tests action dispatch, and uploads the rebuilt
+JS/WASM artifacts. Amalgamation generation uses the framework commit's timestamp via
 `SOURCE_DATE_EPOCH` and UTC; its own CI job verifies regeneration is unchanged.
 
 Native checks compile **the generated amalgamation**, not the framework source:

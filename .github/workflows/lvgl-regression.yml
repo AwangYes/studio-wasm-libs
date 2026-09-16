@@ -38,10 +38,9 @@ jobs:
           emcmake cmake -S "$FREETYPE_SOURCE_DIR" -B "$FREETYPE_SOURCE_DIR/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DFT_DISABLE_ZLIB=ON -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
           cmake --build "$FREETYPE_SOURCE_DIR/build" --parallel 2
           scripts/build-lvgl-tests.sh ${{ matrix.lvgl }}
-      - name: Verify reproducible release engine
+      - name: Record rebuilt release engine checksums
         run: |
           sha256sum release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.{js,wasm}
-          git diff --quiet -- release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.js release/wasm/lvgl_runtime_v${{ matrix.lvgl }}.wasm || true
       - uses: actions/upload-artifact@v4
         with:
           name: lvgl-${{ matrix.lvgl }}

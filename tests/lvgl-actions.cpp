@@ -141,12 +141,18 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     fixture.run(68, textarea, Value(false, VALUE_TYPE_BOOLEAN));
     CHECK(!lv_textarea_get_password_mode(textarea));
 
+    // A default symbol binding must not overwrite a later literal Set Map.
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 0, LV_SYMBOL_BACKSPACE));
+    CHECK(!strcmp(GET_TEXT(matrix, 0), LV_SYMBOL_BACKSPACE));
+    CHECK(!eez_flow_set_buttonmatrix_text(matrix, 999, "x"));
+    CHECK(!eez_flow_set_buttonmatrix_text(matrix, 0, "\n"));
     fixture.values[2] = Value(2 | CTRL_DISABLED, VALUE_TYPE_INT32);
     fixture.values[3] = stringValue("\n");
     fixture.values[4] = Value(0, VALUE_TYPE_INT32);
     fixture.values[5] = stringValue(LV_SYMBOL_OK " OK");
     fixture.values[6] = Value(1 | CTRL_CHECKED, VALUE_TYPE_INT32);
     fixture.run(72, matrix, stringValue("first"), 7);
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 0, LV_SYMBOL_BACKSPACE));
     CHECK(!strcmp(GET_TEXT(matrix, 0), "first"));
     CHECK(!strcmp(GET_TEXT(matrix, 1), LV_SYMBOL_OK " OK"));
     CHECK(HAS_CTRL(matrix, 0, CTRL_DISABLED));
@@ -176,20 +182,20 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     for (int i = 0; i < 500; i++) {
         fixture.run(72, matrix, stringValue(i % 2 ? "A" : "B"), 7);
         CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, "动态 " LV_SYMBOL_CLOSE));
-        CHECK(!strcmp(GET_TEXT(matrix, 1), "动态 " LV_SYMBOL_CLOSE));
+        CHECK(!strcmp(GET_TEXT(matrix, 1), LV_SYMBOL_OK " OK"));
         CHECK(HAS_CTRL(matrix, 0, CTRL_DISABLED));
         CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, ""));
-        CHECK(!strcmp(GET_TEXT(matrix, 1), " "));
+        CHECK(!strcmp(GET_TEXT(matrix, 1), LV_SYMBOL_OK " OK"));
     }
     CHECK(!strcmp(buttonSnapshot.getString(), LV_SYMBOL_OK " OK"));
     fixture.run(73, matrix, Value(1, VALUE_TYPE_INT32), 3);
-    CHECK(!strcmp(fixture.result.getString(), " "));
+    CHECK(!strcmp(fixture.result.getString(), LV_SYMBOL_OK " OK"));
     CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, "动态 " LV_SYMBOL_CLOSE));
     fixture.run(73, matrix, Value(1, VALUE_TYPE_INT32), 3);
-    CHECK(!strcmp(fixture.result.getString(), "动态 " LV_SYMBOL_CLOSE));
-    CHECK(!eez_flow_set_buttonmatrix_text(matrix, 99, "x"));
-    CHECK(!eez_flow_set_buttonmatrix_text(matrix, 1, "x"));
-    CHECK(!eez_flow_set_buttonmatrix_text(matrix, 2, "\n"));
+    CHECK(!strcmp(fixture.result.getString(), LV_SYMBOL_OK " OK"));
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 99, "x"));
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 1, "x"));
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, "\n"));
     errors = 0;
     fixture.run(0xffffffff, textarea);
     CHECK(errors == 1);

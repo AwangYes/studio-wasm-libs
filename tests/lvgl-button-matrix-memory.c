@@ -115,6 +115,32 @@ int eez_test_button_matrix_memory(void) {
     EEZ_BM_SET_MAP(matrix, initial); /* A caller may install another static map. */
     CHECK(eez_bm_set_text(matrix, 0, "after external map"));
     CHECK(allocations == 2);
+    /* Failures must not detach live expressions, with or without prior state. */
+    CHECK(eez_bm_update_bound_text(matrix, 0, LV_SYMBOL_BACKSPACE));
+    fail_after = 0;
+    CHECK(!eez_bm_set_map(matrix, replacement, 3, NULL));
+    fail_after = -1;
+    CHECK(eez_bm_update_bound_text(matrix, 0, "still bound"));
+    CHECK(!strcmp(EEZ_BM_GET_MAP(matrix)[0], "still bound"));
+    CHECK(eez_bm_set_map(matrix, replacement, 3, NULL));
+    CHECK(eez_bm_update_bound_text(matrix, 0, LV_SYMBOL_BACKSPACE));
+    CHECK(!strcmp(EEZ_BM_GET_MAP(matrix)[0], "owned"));
+    CHECK(eez_bm_set_map(matrix, initial, 3, NULL));
+    CHECK(eez_bm_update_bound_text(matrix, 2, "stale expression"));
+    CHECK(!strcmp(EEZ_BM_GET_MAP(matrix)[2], "static"));
+    lv_obj_del(matrix);
+    CHECK(allocations == 0);
+#if LVGL_VERSION_MAJOR >= 9
+    matrix = lv_buttonmatrix_create(screen);
+#else
+    matrix = lv_btnmatrix_create(screen);
+#endif
+    EEZ_BM_SET_MAP(matrix, initial);
+    fail_event = true;
+    CHECK(!eez_bm_set_map(matrix, replacement, 3, NULL));
+    fail_event = false;
+    CHECK(eez_bm_update_bound_text(matrix, 0, "recreated binding"));
+    CHECK(!strcmp(EEZ_BM_GET_MAP(matrix)[0], "recreated binding"));
     lv_obj_del(screen);
     CHECK(allocations == 0);
     printf("PASS: C map helper allocation/event failures, aliasing, limits and bubbled delete\n");

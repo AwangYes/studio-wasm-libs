@@ -6,6 +6,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <initializer_list>
 #ifdef EEZ_TEST_AMALGAMATION
 #include "eez-flow.h"
 #else

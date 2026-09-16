@@ -78,6 +78,9 @@ struct Fixture {
         instructions[1][0] = (id == 65 || id == 71)
             ? EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR
             : EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT | 1;
+        instructions[2][0] = id == 73
+            ? EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR
+            : EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT | 2;
         executeLVGLApiComponent(&state, 0);
     }
 };
@@ -157,6 +160,17 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     SET_SELECTED(matrix, 0xffff);
     fixture.run(71, matrix);
     CHECK(fixture.result.getInt() == 65535);
+    fixture.run(73, matrix, Value(0, VALUE_TYPE_INT32), 3);
+    CHECK(fixture.result.isString());
+    CHECK(!strcmp(fixture.result.getString(), "first"));
+    fixture.run(73, matrix, Value(1, VALUE_TYPE_INT32), 3);
+    CHECK(!strcmp(fixture.result.getString(), LV_SYMBOL_OK " OK"));
+    Value buttonSnapshot = fixture.result;
+    for (int id : {-1, 2, 65535, 65536, 2147483647}) {
+        fixture.run(73, matrix, Value(id, VALUE_TYPE_INT32), 3);
+        CHECK(fixture.result.isString());
+        CHECK(!strcmp(fixture.result.getString(), ""));
+    }
     for (int i = 0; i < 500; i++) {
         fixture.run(72, matrix, stringValue(i % 2 ? "A" : "B"), 7);
         CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, "动态 " LV_SYMBOL_CLOSE));
@@ -165,6 +179,12 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
         CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, ""));
         CHECK(!strcmp(GET_TEXT(matrix, 1), " "));
     }
+    CHECK(!strcmp(buttonSnapshot.getString(), LV_SYMBOL_OK " OK"));
+    fixture.run(73, matrix, Value(1, VALUE_TYPE_INT32), 3);
+    CHECK(!strcmp(fixture.result.getString(), " "));
+    CHECK(eez_flow_set_buttonmatrix_text(matrix, 2, "动态 " LV_SYMBOL_CLOSE));
+    fixture.run(73, matrix, Value(1, VALUE_TYPE_INT32), 3);
+    CHECK(!strcmp(fixture.result.getString(), "动态 " LV_SYMBOL_CLOSE));
     CHECK(!eez_flow_set_buttonmatrix_text(matrix, 99, "x"));
     CHECK(!eez_flow_set_buttonmatrix_text(matrix, 1, "x"));
     CHECK(!eez_flow_set_buttonmatrix_text(matrix, 2, "\n"));
@@ -177,8 +197,14 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     CHECK(errors == 3);
     fixture.run(72, matrix, stringValue("invalid"), 2);
     CHECK(errors == 4);
+    fixture.run(73, matrix, Value(), 2);
+    CHECK(errors == 5);
+    fixture.run(73, textarea, Value(0, VALUE_TYPE_INT32), 3);
+    CHECK(errors == 6);
     CHECK(!strcmp(GET_TEXT(matrix, 0), "A"));
     fixture.run(72, matrix, Value(), 1);
+    fixture.run(73, matrix, Value(0, VALUE_TYPE_INT32), 3);
+    CHECK(!strcmp(fixture.result.getString(), ""));
     CHECK(eez_flow_set_buttonmatrix_map(matrix, (const char *const[]){"one"}, 1, NULL));
     fixture.values[2] = Value(1, VALUE_TYPE_INT32);
     fixture.run(72, matrix, Value(123, VALUE_TYPE_INT32), 3);
@@ -186,8 +212,10 @@ extern "C" EMSCRIPTEN_KEEPALIVE int eez_test_lvgl_actions() {
     fixture.result = Value();
     fixture.run(65, textarea);
     lv_obj_del(screen);
+    CHECK(!strcmp(buttonSnapshot.getString(), LV_SYMBOL_OK " OK"));
     CHECK(!strcmp(fixture.result.getString(), "changed"));
     fixture.result = Value();
+    buttonSnapshot = Value();
     stopScriptHook = previousStopHook;
     CHECK(eez_test_button_matrix_memory() == 0);
     printf("PASS: LVGL %d.%d.%d action dispatch, ownership and 500 map replacements\n", LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH);
